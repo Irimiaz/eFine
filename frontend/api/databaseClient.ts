@@ -1,7 +1,9 @@
 import axios, { AxiosInstance } from "axios";
+import { Platform } from "react-native";
 
 // Point this at your backend (10.0.2.2 for Android emulator, localhost for iOS)
-const API_BASE = "http://10.0.2.2:3000";
+const API_BASE =
+  Platform.OS === "web" ? "http://localhost:3000" : "http://10.0.2.2:3000";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE,
