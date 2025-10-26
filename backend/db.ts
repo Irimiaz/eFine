@@ -28,7 +28,7 @@ let collectionsCache: string[] | null = null;
 export async function connectToDatabase(): Promise<Db> {
   if (dbConnection) return dbConnection;
   await client.connect();
-  dbConnection = client.db("data"); // or use process.env.DB_NAME
+  dbConnection = client.db(process.env.DB_NAME); // or use process.env.DB_NAME
   console.log("✅  Successfully connected to MongoDB");
   return dbConnection;
 }
