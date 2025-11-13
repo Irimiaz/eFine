@@ -343,3 +343,259 @@ export const generatePaymentOrderPDF = async (data: any) => {
     }
   }
 };
+
+export const generateStatisticsPDF = async (stats: any, data: any[]) => {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const { width, height } = page.getSize();
+  const margin = 50;
+
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  const drawText = (text: string, x: number, y: number, options: any = {}) => {
+    page.drawText(text, {
+      x,
+      y,
+      size: options.size || 12,
+      font: options.font || font,
+      color: options.color || rgb(0, 0, 0),
+    });
+  };
+
+  const drawLine = (x1: number, y1: number, x2: number, y2: number) => {
+    page.drawLine({
+      start: { x: x1, y: y1 },
+      end: { x: x2, y: y2 },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  };
+
+  const drawRect = (x: number, y: number, w: number, h: number, color: any) => {
+    page.drawRectangle({
+      x,
+      y,
+      width: w,
+      height: h,
+      borderColor: rgb(0.7, 0.7, 0.7),
+      borderWidth: 1,
+      color,
+    });
+  };
+
+  let y = height - margin;
+
+  // Header
+  page.drawRectangle({
+    x: margin,
+    y: y - 80,
+    width: width - 2 * margin,
+    height: 80,
+    color: rgb(0.2, 0.4, 0.8),
+  });
+
+  drawText("RAPORT STATISTICI - SISTEM PLATA AMENZI", margin + 20, y - 30, {
+    size: 18,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  drawText(
+    `Generat la: ${new Date().toLocaleString("ro-RO")}`,
+    margin + 20,
+    y - 55,
+    { size: 10, color: rgb(0.9, 0.9, 0.9) }
+  );
+
+  y -= 100;
+
+  // Summary Section
+  drawText("REZUMAT GENERAL", margin, y, {
+    size: 14,
+    font: fontBold,
+    color: rgb(0.2, 0.4, 0.8),
+  });
+  y -= 25;
+
+  const summaryData = [
+    ["Total Formulare:", stats.totalSubmissions.toString()],
+    ["Total Incasat:", `${stats.totalRevenue.toFixed(2)} RON`],
+    ["Medie Suma/Formular:", `${stats.averageFine.toFixed(2)} RON`],
+  ];
+
+  summaryData.forEach(([label, value]) => {
+    drawText(label, margin, y, { size: 11 });
+    drawText(value, width - margin - 100, y, { size: 11, font: fontBold });
+    y -= 20;
+  });
+
+  y -= 20;
+
+  // Analysis 1: Payment Timing
+  drawText("ANALIZA 1: TIMPUL DE PLATA", margin, y, {
+    size: 14,
+    font: fontBold,
+    color: rgb(0.2, 0.4, 0.8),
+  });
+  y -= 20;
+
+  // Bar chart representation
+  const barWidth = width - 2 * margin - 200;
+  const barHeight = 15;
+
+  // Early payments bar
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * stats.earlyPaymentPercentage) / 100,
+    barHeight,
+    rgb(0, 0.6, 0)
+  );
+  drawText(
+    `Plati in Termen: ${stats.earlyPaymentPercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 25;
+
+  // On-time payments bar
+  const onTimePercentage =
+    (stats.onTimePayments / stats.totalSubmissions) * 100;
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * onTimePercentage) / 100,
+    barHeight,
+    rgb(0.4, 0.4, 0.4)
+  );
+  drawText(
+    `Plati Standard: ${onTimePercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 25;
+
+  // Late payments bar
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * stats.latePaymentPercentage) / 100,
+    barHeight,
+    rgb(0.8, 0, 0)
+  );
+  drawText(
+    `Plati Dupa Termen: ${stats.latePaymentPercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 30;
+
+  // Analysis 2: Fine Amount Distribution
+  drawText("ANALIZA 2: DISTRIBUTIA SUMEI AMENZILOR", margin, y, {
+    size: 14,
+    font: fontBold,
+    color: rgb(0.2, 0.4, 0.8),
+  });
+  y -= 20;
+
+  // Fine distribution bars
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * stats.lowFinePercentage) / 100,
+    barHeight,
+    rgb(0.2, 0.5, 1)
+  );
+  drawText(
+    `Amenzi Mici (< 200 RON): ${stats.lowFinePercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 25;
+
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * stats.mediumFinePercentage) / 100,
+    barHeight,
+    rgb(0.5, 0.3, 1)
+  );
+  drawText(
+    `Amenzi Medii (200-500 RON): ${stats.mediumFinePercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 25;
+
+  drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
+  drawRect(
+    margin,
+    y,
+    (barWidth * stats.highFinePercentage) / 100,
+    barHeight,
+    rgb(0.9, 0.3, 0.3)
+  );
+  drawText(
+    `Amenzi Mari (> 500 RON): ${stats.highFinePercentage.toFixed(1)}%`,
+    margin + barWidth + 10,
+    y + 2,
+    { size: 10 }
+  );
+  y -= 30;
+
+  // Footer
+  drawText(
+    "Acest raport a fost generat automat de Sistemul Electronic de Plata a Contraventiilor.",
+    margin,
+    y,
+    { size: 9, color: rgb(0.5, 0.5, 0.5) }
+  );
+
+  const pdfBytes = await pdfDoc.save();
+  const filename = `Raport_Statistici_${Date.now()}.pdf`;
+
+  if (Platform.OS === "web") {
+    const arrayBuffer = pdfBytes.buffer.slice(
+      pdfBytes.byteOffset,
+      pdfBytes.byteOffset + pdfBytes.byteLength
+    );
+    const blob = new Blob([arrayBuffer as ArrayBuffer], {
+      type: "application/pdf",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } else {
+    const FileSystem = require("expo-file-system");
+    const Sharing = require("expo-sharing");
+
+    const base64String = btoa(String.fromCharCode(...pdfBytes));
+
+    const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+    await FileSystem.writeAsStringAsync(fileUri, base64String, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUri);
+    } else {
+      Alert.alert("PDF generat", `Salvat la: ${fileUri}`);
+    }
+  }
+};
