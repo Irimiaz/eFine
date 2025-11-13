@@ -15,6 +15,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import tw from "twrnc"; // <-- tailwind-in-RN (tw`...`)
 import { generatePaymentOrderPDF, generateXML } from "../../utils/formHelpers";
 import { setDataToCollection } from "../../api/databaseClient";
+import { MainStackParamList } from "../../types/navigation";
+import useStackNavigation from "../../hooks/useStackNavigation";
 
 const showAlert = (title: string, message: string, buttons?: any[]) => {
   if (Platform.OS === "web") {
@@ -48,6 +50,8 @@ type FormData = {
 };
 
 export default function FinePaymentForm() {
+  const { goToScreen } = useStackNavigation<MainStackParamList>();
+
   // Personal Information
   const [nume, setNume] = useState("");
   const [prenume, setPrenume] = useState("");
@@ -728,6 +732,18 @@ export default function FinePaymentForm() {
         </View>
 
         <View style={tw`bg-white mx-4 mb-6 rounded-2xl p-5 shadow-md gap-3`}>
+          {/* Statistics Button */}
+          <TouchableOpacity
+            style={tw`flex-row items-center justify-center bg-transparent border-2 border-purple-600 rounded-xl py-4 gap-2`}
+            onPress={() => goToScreen("Statistics")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="stats-chart" size={20} color="#7C3AED" />
+            <Text style={tw`text-[15px] font-semibold text-purple-600`}>
+              Vezi Statistici
+            </Text>
+          </TouchableOpacity>
+
           {!!errorMessage && (
             <View
               style={tw`flex-row items-center bg-red-50 border border-red-200 rounded-lg p-3 mb-2 gap-2`}

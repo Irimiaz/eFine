@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Dashboard from "../dashboard/Dashboard";
-
+import Statistics from "../dashboard/Statistics";
 const Stack = createNativeStackNavigator();
 
 const MainStack = () => {
@@ -16,6 +16,7 @@ const MainStack = () => {
       initialRouteName="Dashboard"
     >
       <Stack.Screen name="Dashboard" component={Dashboard} />
+      <Stack.Screen name="Statistics" component={Statistics} />
     </Stack.Navigator>
   );
 };

@@ -4,4 +4,5 @@ export type RootStackParamList = {
 
 export type MainStackParamList = {
   Dashboard: undefined;
+  Statistics: undefined;
 };
