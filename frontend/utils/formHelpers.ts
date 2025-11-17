@@ -380,12 +380,19 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     });
   };
 
-  const drawLine = (x1: number, y1: number, x2: number, y2: number) => {
+  const drawLine = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    color: any = rgb(0.15, 0.39, 0.88),
+    thickness: number = 2
+  ) => {
     page.drawLine({
       start: { x: x1, y: y1 },
       end: { x: x2, y: y2 },
-      thickness: 1,
-      color: rgb(0.8, 0.8, 0.8),
+      thickness,
+      color,
     });
   };
 
@@ -427,44 +434,100 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
 
   y -= 100;
 
-  // Summary Section
-  drawText("REZUMAT GENERAL", margin, y, {
+  // Stats Cards Section
+  drawText("STATISTICI GENERALE", margin, y, {
     size: 14,
     font: fontBold,
     color: rgb(0.2, 0.4, 0.8),
   });
   y -= 25;
 
-  const summaryData = [
-    ["Total Formulare:", stats.totalSubmissions.toString()],
-    ["Total Incasat:", `${stats.totalRevenue.toFixed(2)} RON`],
-    ["Medie Suma/Formular:", `${stats.averageFine.toFixed(2)} RON`],
-    ["Total Reduceri:", `${stats.totalDiscounts.toFixed(2)} RON`],
-    ["Total Penalizari:", `${stats.totalPenalties.toFixed(2)} RON`],
-  ];
+  const cardWidth = (width - 2 * margin - 40) / 3;
+  const cardHeight = 60;
 
-  summaryData.forEach(([label, value]) => {
-    drawText(label, margin, y, { size: 11 });
-    drawText(value, width - margin - 100, y, { size: 11, font: fontBold });
-    y -= 20;
+  // Card 1: Total Submissions
+  drawRect(margin, y - cardHeight, cardWidth, cardHeight, rgb(1, 1, 1));
+  drawRect(margin, y - cardHeight, cardWidth, 3, rgb(0.15, 0.39, 0.88));
+  drawText("Numar de amenzi platite", margin + 10, y - 20, {
+    size: 9,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  drawText(stats.totalSubmissions.toString(), margin + 10, y - 40, {
+    size: 20,
+    font: fontBold,
   });
 
-  y -= 20;
+  // Card 2: Total Revenue
+  drawRect(
+    margin + cardWidth + 20,
+    y - cardHeight,
+    cardWidth,
+    cardHeight,
+    rgb(1, 1, 1)
+  );
+  drawRect(
+    margin + cardWidth + 20,
+    y - cardHeight,
+    cardWidth,
+    3,
+    rgb(0.05, 0.59, 0.41)
+  );
+  drawText("Total suma platita", margin + cardWidth + 30, y - 20, {
+    size: 9,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  drawText(
+    `${stats.totalRevenue.toFixed(2)} RON`,
+    margin + cardWidth + 30,
+    y - 40,
+    {
+      size: 16,
+      font: fontBold,
+    }
+  );
+
+  // Card 3: Average Fine
+  drawRect(
+    margin + 2 * (cardWidth + 20),
+    y - cardHeight,
+    cardWidth,
+    cardHeight,
+    rgb(1, 1, 1)
+  );
+  drawRect(
+    margin + 2 * (cardWidth + 20),
+    y - cardHeight,
+    cardWidth,
+    3,
+    rgb(0.49, 0.23, 0.93)
+  );
+  drawText(
+    "Medie suma platita/Amenda",
+    margin + 2 * (cardWidth + 20) + 10,
+    y - 20,
+    {
+      size: 9,
+      color: rgb(0.4, 0.4, 0.4),
+    }
+  );
+  drawText(
+    `${stats.averageFine.toFixed(2)} RON`,
+    margin + 2 * (cardWidth + 20) + 10,
+    y - 40,
+    {
+      size: 16,
+      font: fontBold,
+    }
+  );
+
+  y -= cardHeight + 30;
 
   // Analysis 1: Payment Timing
-  drawText("ANALIZA 1: TIMPUL DE PLATA", margin, y, {
+  drawText("TIMPUL DE PLATA", margin, y, {
     size: 14,
     font: fontBold,
     color: rgb(0.2, 0.4, 0.8),
   });
-  y -= 20;
-
-  drawText(
-    "Analiza evidentiaza proportia platilor efectuate in termen (cu reducere), in termen standard si dupa termen (cu penalizare).",
-    margin,
-    y,
-    { size: 10, color: rgb(0.5, 0.5, 0.5) }
-  );
   y -= 25;
 
   const barWidth = width - 2 * margin - 200;
@@ -477,10 +540,12 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * stats.earlyPaymentPercentage) / 100,
     barHeight,
-    rgb(0, 0.6, 0)
+    rgb(0.05, 0.59, 0.41)
   );
   drawText(
-    `Plati in Termen: ${stats.earlyPaymentPercentage.toFixed(1)}%`,
+    `Plati in Termen (cu Reducere): ${stats.earlyPaymentPercentage.toFixed(
+      1
+    )}%`,
     margin + barWidth + 10,
     y + 2,
     { size: 10 }
@@ -496,10 +561,12 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * onTimePercentage) / 100,
     barHeight,
-    rgb(0.4, 0.4, 0.4)
+    rgb(0.42, 0.45, 0.5)
   );
   drawText(
-    `Plati Standard: ${onTimePercentage.toFixed(1)}%`,
+    `Plati Standard (fara Reducere/Penalizare): ${onTimePercentage.toFixed(
+      1
+    )}%`,
     margin + barWidth + 10,
     y + 2,
     { size: 10 }
@@ -513,46 +580,24 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * stats.latePaymentPercentage) / 100,
     barHeight,
-    rgb(0.8, 0, 0)
+    rgb(0.86, 0.15, 0.15)
   );
   drawText(
-    `Plati Dupa Termen: ${stats.latePaymentPercentage.toFixed(1)}%`,
+    `Plati Dupa Termen (cu Penalizare): ${stats.latePaymentPercentage.toFixed(
+      1
+    )}%`,
     margin + barWidth + 10,
     y + 2,
     { size: 10 }
   );
   y -= 30;
 
-  drawText(
-    `Concluzie: Din totalul de ${stats.totalSubmissions} formulare, ${
-      stats.earlyPayments
-    } (${stats.earlyPaymentPercentage.toFixed(
-      1
-    )}%) au fost platite in termen si au beneficiat de reducere, in timp ce ${
-      stats.latePayments
-    } (${stats.latePaymentPercentage.toFixed(
-      1
-    )}%) au fost platite dupa termen si au primit penalizare.`,
-    margin,
-    y,
-    { size: 10 }
-  );
-  y -= 40;
-
   // Analysis 2: Fine Amount Distribution
-  drawText("ANALIZA 2: DISTRIBUTIA SUMEI AMENZILOR", margin, y, {
+  drawText("DISTRIBUTIA SUMEI AMENZILOR", margin, y, {
     size: 14,
     font: fontBold,
     color: rgb(0.2, 0.4, 0.8),
   });
-  y -= 20;
-
-  drawText(
-    "Analiza evidentiaza distributia amenzilor in functie de valoarea acestora: amenzi mici (sub 200 RON), amenzi medii (200-500 RON) si amenzi mari (peste 500 RON).",
-    margin,
-    y,
-    { size: 10, color: rgb(0.5, 0.5, 0.5) }
-  );
   y -= 25;
 
   // Fine distribution bars
@@ -562,7 +607,7 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * stats.lowFinePercentage) / 100,
     barHeight,
-    rgb(0.2, 0.5, 1)
+    rgb(0.23, 0.51, 0.96)
   );
   drawText(
     `Amenzi Mici (< 200 RON): ${stats.lowFinePercentage.toFixed(1)}%`,
@@ -578,7 +623,7 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * stats.mediumFinePercentage) / 100,
     barHeight,
-    rgb(0.5, 0.3, 1)
+    rgb(0.55, 0.31, 0.96)
   );
   drawText(
     `Amenzi Medii (200-500 RON): ${stats.mediumFinePercentage.toFixed(1)}%`,
@@ -594,7 +639,7 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     y,
     (barWidth * stats.highFinePercentage) / 100,
     barHeight,
-    rgb(0.9, 0.3, 0.3)
+    rgb(0.94, 0.27, 0.27)
   );
   drawText(
     `Amenzi Mari (> 500 RON): ${stats.highFinePercentage.toFixed(1)}%`,
@@ -604,143 +649,125 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   );
   y -= 30;
 
-  drawText(
-    `Concluzie: Din totalul de ${stats.totalSubmissions} formulare, ${
-      stats.lowFines
-    } (${stats.lowFinePercentage.toFixed(1)}%) sunt amenzi mici, ${
-      stats.mediumFines
-    } (${stats.mediumFinePercentage.toFixed(1)}%) sunt amenzi medii, si ${
-      stats.highFines
-    } (${stats.highFinePercentage.toFixed(1)}%) sunt amenzi mari.`,
-    margin,
-    y,
-    { size: 10 }
-  );
-  y -= 40;
-
-  // Analysis 3: Daily Payments (Line Chart Representation)
+  // Analysis 3: Daily Payments - Improved Line Chart
   if (stats.dailyPayments && stats.dailyPayments.length > 0) {
-    drawText("ANALIZA 3: PLATA ZILNICA (ULTIMELE 30 ZILE)", margin, y, {
+    drawText("PLATA ZILNICA (ULTIMELE 30 ZILE)", margin, y, {
       size: 14,
       font: fontBold,
       color: rgb(0.2, 0.4, 0.8),
     });
-    y -= 20;
-
-    drawText(
-      "Graficul arata numarul de formulare platite in fiecare zi din ultimele 30 de zile.",
-      margin,
-      y,
-      { size: 10, color: rgb(0.5, 0.5, 0.5) }
-    );
     y -= 25;
 
-    // Simple line chart representation using bars
-    const chartHeight = 80;
-    const chartStartY = y;
+    const chartHeight = 120;
     const chartWidth = width - 2 * margin;
-    const last7Days = stats.dailyPayments.slice(-7);
-    const maxCount = Math.max(...last7Days.map((d) => d.count), 1);
-    const barSpacing = chartWidth / 7;
+    const all30Days = stats.dailyPayments;
+    const maxCount = Math.max(...all30Days.map((d: any) => d.count), 1);
+    const chartStartX = margin;
+    const chartStartY = y - chartHeight;
+    const chartEndX = margin + chartWidth;
+    const chartEndY = y;
 
     // Draw chart background
     drawRect(
-      margin,
-      y - chartHeight,
+      chartStartX,
+      chartStartY,
       chartWidth,
       chartHeight,
       rgb(0.95, 0.95, 0.95)
     );
 
-    // Draw bars for each day
-    last7Days.forEach((day, index) => {
-      const barHeight = (day.count / maxCount) * chartHeight;
-      const barX = margin + index * barSpacing + 5;
-      const barY = y - chartHeight + (chartHeight - barHeight);
+    // Draw grid lines
+    for (let i = 0; i <= 4; i++) {
+      const gridY = chartStartY + (chartHeight / 4) * i;
+      drawLine(chartStartX, gridY, chartEndX, gridY, rgb(0.9, 0.9, 0.9), 0.5);
+      // Y-axis labels (0 at bottom, maxCount at top - matching data positions)
+      const value = (maxCount / 4) * i;
+      drawText(Math.round(value).toString(), chartStartX - 25, gridY - 5, {
+        size: 9,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+    }
 
-      drawRect(barX, barY, barSpacing - 10, barHeight, rgb(0.2, 0.4, 0.8));
+    // Draw line chart
+    const pointSpacing = chartWidth / (all30Days.length - 1);
+    const points: Array<{ x: number; y: number }> = [];
 
-      // Day label
-      const date = new Date(day.date);
-      drawText(
-        date.getDate().toString(),
-        barX + (barSpacing - 10) / 2 - 5,
-        y - chartHeight - 15,
-        { size: 9 }
-      );
-    });
-
-    y -= chartHeight + 30;
-
-    drawText(
-      `Observatie: In ultimele 30 de zile, ziua cu cele mai multe plati a avut ${
-        stats.maxDailyPayments
-      } formulare. Media zilnica este de ${(
-        stats.totalSubmissions / 30
-      ).toFixed(1)} formulare.`,
-      margin,
-      y,
-      { size: 10 }
-    );
-    y -= 40;
-  }
-
-  // Analysis 4: Authority Distribution
-  if (stats.authorityStats && stats.authorityStats.length > 0) {
-    drawText("ANALIZA 4: DISTRIBUTIA PE AUTORITATI", margin, y, {
-      size: 14,
-      font: fontBold,
-      color: rgb(0.2, 0.4, 0.8),
-    });
-    y -= 20;
-
-    drawText(
-      "Top 5 autoritati emitente in functie de numarul de formulare procesate.",
-      margin,
-      y,
-      { size: 10, color: rgb(0.5, 0.5, 0.5) }
-    );
-    y -= 25;
-
-    stats.authorityStats.forEach((auth: any, index: number) => {
-      const authName = removeDiacritics(
-        auth.name.length > 30 ? auth.name.substring(0, 30) + "..." : auth.name
-      );
-      drawText(
-        `${index + 1}. ${authName}: ${
-          auth.count
-        } formulare (${auth.percentage.toFixed(1)}%)`,
-        margin,
+    all30Days.forEach((day: any, index: number) => {
+      const x = chartStartX + index * pointSpacing;
+      const y = chartStartY + (day.count * chartHeight) / maxCount;
+      points.push({ x, y });
+      console.log(all30Days);
+      // Draw data point
+      page.drawCircle({
+        x,
         y,
-        { size: 10 }
-      );
-      y -= 18;
+        size: 3,
+        color: rgb(0.15, 0.39, 0.88),
+      });
     });
 
-    y -= 10;
+    // Draw connecting lines
+    for (let i = 0; i < points.length - 1; i++) {
+      drawLine(
+        points[i].x,
+        points[i].y,
+        points[i + 1].x,
+        points[i + 1].y,
+        rgb(0.15, 0.39, 0.88),
+        2
+      );
+    }
 
-    drawText(
-      `Concluzie: ${removeDiacritics(
-        stats.authorityStats[0]?.name || ""
-      )} este autoritatea cu cele mai multe formulare (${
-        stats.authorityStats[0]?.count
-      }), reprezentand ${stats.authorityStats[0]?.percentage.toFixed(
-        1
-      )}% din total.`,
-      margin,
-      y,
-      { size: 10 }
-    );
-    y -= 40;
+    // Draw X-axis labels (every 5 days)
+    for (let i = 0; i < all30Days.length; i += 1) {
+      const date = new Date(all30Days[i].date);
+      const x = chartStartX + i * pointSpacing;
+      drawText(date.getDate().toString(), x - 5, chartStartY - 15, { size: 8 });
+    }
+
+    y -= chartHeight + 50;
   }
 
-  // Footer
-  drawText(
-    "Acest raport a fost generat automat de Sistemul Electronic de Plata a Contraventiilor.",
-    margin,
-    y,
-    { size: 9, color: rgb(0.5, 0.5, 0.5) }
-  );
+  // Additional Statistics Section
+  drawText("STATISTICI SUPLIMENTARE", margin, y, {
+    size: 14,
+    font: fontBold,
+    color: rgb(0.2, 0.4, 0.8),
+  });
+  y -= 25;
+
+  // Total Discounts
+  drawText("Total Reduceri Acordate:", margin, y, { size: 11 });
+  drawText(`${stats.totalDiscounts.toFixed(2)} RON`, width - margin - 100, y, {
+    size: 11,
+    font: fontBold,
+    color: rgb(0.05, 0.59, 0.41),
+  });
+  y -= 20;
+
+  // Average Discount
+  drawText("Medie Reducere/Plata:", margin, y, { size: 11 });
+  drawText(`${stats.averageDiscount.toFixed(2)} RON`, width - margin - 100, y, {
+    size: 11,
+    font: fontBold,
+  });
+  y -= 20;
+
+  // Total Penalties
+  drawText("Total Penalizari Aplicate:", margin, y, { size: 11 });
+  drawText(`${stats.totalPenalties.toFixed(2)} RON`, width - margin - 100, y, {
+    size: 11,
+    font: fontBold,
+    color: rgb(0.86, 0.15, 0.15),
+  });
+  y -= 20;
+
+  // Average Penalty
+  drawText("Medie Penalizare/Plata:", margin, y, { size: 11 });
+  drawText(`${stats.averagePenalty.toFixed(2)} RON`, width - margin - 100, y, {
+    size: 11,
+    font: fontBold,
+  });
 
   const pdfBytes = await pdfDoc.save();
   const filename = `Raport_Statistici_${Date.now()}.pdf`;

@@ -375,11 +375,14 @@ export default function Statistics() {
             <View style={tw`relative`}>
               <GiftedLineChart
                 data={chartData}
-                width={Math.max(screenWidth - 80, data.length * 20)}
+                width={Math.max((screenWidth * 3) / 5 - 150, data.length * 20)}
                 height={220}
                 color="#2563EB"
                 thickness={2}
-                spacing={Math.max((screenWidth - 80) / data.length, 20)}
+                spacing={Math.max(
+                  ((screenWidth * 3) / 5 - 150) / data.length,
+                  20
+                )}
                 curved
                 areaChart
                 startFillColor="#2563EB"
@@ -429,44 +432,6 @@ export default function Statistics() {
     );
   };
 
-  const PieChartRepresentation = ({
-    data,
-    label,
-  }: {
-    data: AuthorityStats[];
-    label: string;
-  }) => {
-    const colors = ["#2563EB", "#059669", "#7C3AED", "#DC2626", "#F59E0B"];
-
-    return (
-      <View style={tw`mb-4`}>
-        <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>
-          {label}
-        </Text>
-        <View style={tw`flex-row flex-wrap gap-3`}>
-          {data.map((item, index) => (
-            <View key={index} style={tw`flex-row items-center mb-2`}>
-              <View
-                style={[
-                  tw`w-4 h-4 rounded-full mr-2`,
-                  { backgroundColor: colors[index % colors.length] },
-                ]}
-              />
-              <Text style={tw`text-sm text-gray-700 flex-1`}>
-                {item.name.length > 20
-                  ? item.name.substring(0, 20) + "..."
-                  : item.name}
-              </Text>
-              <Text style={tw`text-sm font-semibold text-gray-900`}>
-                {item.count} ({item.percentage.toFixed(1)}%)
-              </Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   if (loading) {
     return (
       <View style={tw`flex-1 bg-gray-50 items-center justify-center`}>
@@ -478,217 +443,237 @@ export default function Statistics() {
 
   return (
     <View style={tw`flex-1 bg-gray-50`}>
-      {/* Header with Back Button */}
-      <View style={tw`bg-white shadow-sm border-b border-gray-200`}>
-        <View style={tw`flex-row items-center px-4 py-4`}>
-          <TouchableOpacity
-            onPress={goBack}
-            style={tw`mr-4 p-2 -ml-2`}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
-          </TouchableOpacity>
-          <View style={tw`flex-1`}>
-            <Text style={tw`text-2xl font-bold text-gray-900`}>Statistici</Text>
-            <Text style={tw`text-sm text-gray-500 mt-1`}>
-              Analiza si rapoarte
-            </Text>
-          </View>
-          {stats && data.length > 0 && (
+      <View style={tw`w-3/5 self-center flex-1`}>
+        {/* Header with Back Button */}
+        <View style={tw`bg-white shadow-sm border-b border-gray-200`}>
+          <View style={tw`flex-row items-center px-4 py-4`}>
             <TouchableOpacity
-              onPress={handleDownloadPDF}
-              style={tw`bg-blue-600 px-4 py-2 rounded-lg flex-row items-center gap-2`}
+              onPress={goBack}
+              style={tw`mr-4 p-2 -ml-2`}
               activeOpacity={0.7}
             >
-              <Ionicons name="download" size={20} color="#fff" />
-              <Text style={tw`text-white font-semibold`}>PDF</Text>
+              <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
-        <View style={tw`p-4`}>
-          {error && (
-            <View
-              style={tw`bg-red-50 border border-red-200 rounded-lg p-4 mb-4`}
-            >
-              <Text style={tw`text-red-600`}>{error}</Text>
-            </View>
-          )}
-
-          {!stats || data.length === 0 ? (
-            <View style={tw`bg-white rounded-xl p-8 items-center`}>
-              <Ionicons name="stats-chart-outline" size={64} color="#9CA3AF" />
-              <Text style={tw`text-gray-500 mt-4 text-center`}>
-                Nu exista date disponibile pentru analiza.
+            <View style={tw`flex-1`}>
+              <Text style={tw`text-2xl font-bold text-gray-900`}>
+                Statistici
               </Text>
-              <TouchableOpacity
-                onPress={fetchData}
-                style={tw`mt-4 bg-blue-600 px-6 py-3 rounded-lg`}
-              >
-                <Text style={tw`text-white font-semibold`}>Reincarca</Text>
-              </TouchableOpacity>
+              <Text style={tw`text-sm text-gray-500 mt-1`}>
+                Analiza si rapoarte
+              </Text>
             </View>
-          ) : (
-            <>
-              {/* Stats Cards */}
-              <View style={tw`flex-row flex-wrap gap-4 mb-6`}>
-                <View
-                  style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
-                >
-                  <View style={tw`flex-row items-center justify-between mb-2`}>
-                    <Ionicons name="document-text" size={24} color="#2563EB" />
-                    <Text style={tw`text-2xl font-bold text-gray-900`}>
-                      {stats.totalSubmissions}
-                    </Text>
-                  </View>
-                  <Text style={tw`text-sm text-gray-600`}>
-                    Numar de amenzi platite
-                  </Text>
-                </View>
-
-                <View
-                  style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
-                >
-                  <View style={tw`flex-row items-center justify-between mb-2`}>
-                    <Ionicons name="cash" size={24} color="#059669" />
-                    <Text style={tw`text-2xl font-bold text-gray-900`}>
-                      {stats.totalRevenue.toFixed(2)} RON
-                    </Text>
-                  </View>
-                  <Text style={tw`text-sm text-gray-600`}>
-                    Total suma platita
-                  </Text>
-                </View>
-
-                <View
-                  style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
-                >
-                  <View style={tw`flex-row items-center justify-between mb-2`}>
-                    <Ionicons name="calculator" size={24} color="#7C3AED" />
-                    <Text style={tw`text-2xl font-bold text-gray-900`}>
-                      {stats.averageFine.toFixed(2)} RON
-                    </Text>
-                  </View>
-                  <Text style={tw`text-sm text-gray-600`}>
-                    Medie suma platita/Amenda
-                  </Text>
-                </View>
-              </View>
-
-              {/* Analysis 1: Payment Timing */}
-              <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
-                <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                  Timpul de Plata
-                </Text>
-
-                <BarChart
-                  label="Plati in Termen (cu Reducere)"
-                  percentage={stats.earlyPaymentPercentage}
-                  color="#059669"
-                />
-                <BarChart
-                  label="Plati Standard (fara Reducere/Penalizare)"
-                  percentage={
-                    (stats.onTimePayments / stats.totalSubmissions) * 100
-                  }
-                  color="#6B7280"
-                />
-                <BarChart
-                  label="Plati Dupa Termen (cu Penalizare)"
-                  percentage={stats.latePaymentPercentage}
-                  color="#DC2626"
-                />
-              </View>
-
-              {/* Analysis 2: Fine Amount Distribution */}
-              <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
-                <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                  Distributia Sumei Amenzilor
-                </Text>
-
-                <BarChart
-                  label="Amenzi Mici (< 200 RON)"
-                  percentage={stats.lowFinePercentage}
-                  color="#3B82F6"
-                />
-                <BarChart
-                  label="Amenzi Medii (200-500 RON)"
-                  percentage={stats.mediumFinePercentage}
-                  color="#8B5CF6"
-                />
-                <BarChart
-                  label="Amenzi Mari (> 500 RON)"
-                  percentage={stats.highFinePercentage}
-                  color="#EF4444"
-                />
-              </View>
-
-              {/* Analysis 3: Daily Payments (Line Chart) */}
-              <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
-                <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                  Plata Zilnica (Ultimele 30 Zile)
-                </Text>
-
-                <LineChart
-                  data={stats.dailyPayments}
-                  maxValue={stats.maxDailyPayments}
-                  label=""
-                />
-              </View>
-
-              {/* Additional Statistics */}
-              <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
-                <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
-                  Statistici Suplimentare
-                </Text>
-                <View style={tw`gap-3`}>
-                  <View
-                    style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
-                  >
-                    <Text style={tw`text-gray-700`}>
-                      Total Reduceri Acordate
-                    </Text>
-                    <Text style={tw`font-semibold text-green-600`}>
-                      {stats.totalDiscounts.toFixed(2)} RON
-                    </Text>
-                  </View>
-                  <View
-                    style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
-                  >
-                    <Text style={tw`text-gray-700`}>Medie Reducere/Plata</Text>
-                    <Text style={tw`font-semibold text-gray-900`}>
-                      {stats.averageDiscount.toFixed(2)} RON
-                    </Text>
-                  </View>
-                  <View
-                    style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
-                  >
-                    <Text style={tw`text-gray-700`}>
-                      Total Penalizari Aplicate
-                    </Text>
-                    <Text style={tw`font-semibold text-red-600`}>
-                      {stats.totalPenalties.toFixed(2)} RON
-                    </Text>
-                  </View>
-                  <View
-                    style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
-                  >
-                    <Text style={tw`text-gray-700`}>
-                      Medie Penalizare/Plata
-                    </Text>
-                    <Text style={tw`font-semibold text-gray-900`}>
-                      {stats.averagePenalty.toFixed(2)} RON
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </>
-          )}
+            {stats && data.length > 0 && (
+              <TouchableOpacity
+                onPress={handleDownloadPDF}
+                style={tw`bg-blue-600 px-4 py-2 rounded-lg flex-row items-center gap-2`}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="download" size={20} color="#fff" />
+                <Text style={tw`text-white font-semibold`}>PDF</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </ScrollView>
+
+        {/* Content */}
+        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
+          <View style={tw`p-4`}>
+            {error && (
+              <View
+                style={tw`bg-red-50 border border-red-200 rounded-lg p-4 mb-4`}
+              >
+                <Text style={tw`text-red-600`}>{error}</Text>
+              </View>
+            )}
+
+            {!stats || data.length === 0 ? (
+              <View style={tw`bg-white rounded-xl p-8 items-center`}>
+                <Ionicons
+                  name="stats-chart-outline"
+                  size={64}
+                  color="#9CA3AF"
+                />
+                <Text style={tw`text-gray-500 mt-4 text-center`}>
+                  Nu exista date disponibile pentru analiza.
+                </Text>
+                <TouchableOpacity
+                  onPress={fetchData}
+                  style={tw`mt-4 bg-blue-600 px-6 py-3 rounded-lg`}
+                >
+                  <Text style={tw`text-white font-semibold`}>Reincarca</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {/* Stats Cards */}
+                <View style={tw`flex-row flex-wrap gap-4 mb-6`}>
+                  <View
+                    style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
+                  >
+                    <View
+                      style={tw`flex-row items-center justify-between mb-2`}
+                    >
+                      <Ionicons
+                        name="document-text"
+                        size={24}
+                        color="#2563EB"
+                      />
+                      <Text style={tw`text-2xl font-bold text-gray-900`}>
+                        {stats.totalSubmissions}
+                      </Text>
+                    </View>
+                    <Text style={tw`text-sm text-gray-600`}>
+                      Numar de amenzi platite
+                    </Text>
+                  </View>
+
+                  <View
+                    style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
+                  >
+                    <View
+                      style={tw`flex-row items-center justify-between mb-2`}
+                    >
+                      <Ionicons name="cash" size={24} color="#059669" />
+                      <Text style={tw`text-2xl font-bold text-gray-900`}>
+                        {stats.totalRevenue.toFixed(2)} RON
+                      </Text>
+                    </View>
+                    <Text style={tw`text-sm text-gray-600`}>
+                      Total suma platita
+                    </Text>
+                  </View>
+
+                  <View
+                    style={tw`bg-white rounded-xl p-5 shadow-sm flex-1 min-w-[150px]`}
+                  >
+                    <View
+                      style={tw`flex-row items-center justify-between mb-2`}
+                    >
+                      <Ionicons name="calculator" size={24} color="#7C3AED" />
+                      <Text style={tw`text-2xl font-bold text-gray-900`}>
+                        {stats.averageFine.toFixed(2)} RON
+                      </Text>
+                    </View>
+                    <Text style={tw`text-sm text-gray-600`}>
+                      Medie suma platita/Amenda
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Analysis 1: Payment Timing */}
+                <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
+                  <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                    Timpul de Plata
+                  </Text>
+
+                  <BarChart
+                    label="Plati in Termen (cu Reducere)"
+                    percentage={stats.earlyPaymentPercentage}
+                    color="#059669"
+                  />
+                  <BarChart
+                    label="Plati Standard (fara Reducere/Penalizare)"
+                    percentage={
+                      (stats.onTimePayments / stats.totalSubmissions) * 100
+                    }
+                    color="#6B7280"
+                  />
+                  <BarChart
+                    label="Plati Dupa Termen (cu Penalizare)"
+                    percentage={stats.latePaymentPercentage}
+                    color="#DC2626"
+                  />
+                </View>
+
+                {/* Analysis 2: Fine Amount Distribution */}
+                <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
+                  <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                    Distributia Sumei Amenzilor
+                  </Text>
+
+                  <BarChart
+                    label="Amenzi Mici (< 200 RON)"
+                    percentage={stats.lowFinePercentage}
+                    color="#3B82F6"
+                  />
+                  <BarChart
+                    label="Amenzi Medii (200-500 RON)"
+                    percentage={stats.mediumFinePercentage}
+                    color="#8B5CF6"
+                  />
+                  <BarChart
+                    label="Amenzi Mari (> 500 RON)"
+                    percentage={stats.highFinePercentage}
+                    color="#EF4444"
+                  />
+                </View>
+
+                {/* Analysis 3: Daily Payments (Line Chart) */}
+                <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
+                  <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                    Plata Zilnica (Ultimele 30 Zile)
+                  </Text>
+
+                  <LineChart
+                    data={stats.dailyPayments}
+                    maxValue={stats.maxDailyPayments}
+                    label=""
+                  />
+                </View>
+
+                {/* Additional Statistics */}
+                <View style={tw`bg-white rounded-xl p-5 shadow-sm`}>
+                  <Text style={tw`text-lg font-bold text-gray-900 mb-4`}>
+                    Statistici Suplimentare
+                  </Text>
+                  <View style={tw`gap-3`}>
+                    <View
+                      style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
+                    >
+                      <Text style={tw`text-gray-700`}>
+                        Total Reduceri Acordate
+                      </Text>
+                      <Text style={tw`font-semibold text-green-600`}>
+                        {stats.totalDiscounts.toFixed(2)} RON
+                      </Text>
+                    </View>
+                    <View
+                      style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
+                    >
+                      <Text style={tw`text-gray-700`}>
+                        Medie Reducere/Plata
+                      </Text>
+                      <Text style={tw`font-semibold text-gray-900`}>
+                        {stats.averageDiscount.toFixed(2)} RON
+                      </Text>
+                    </View>
+                    <View
+                      style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
+                    >
+                      <Text style={tw`text-gray-700`}>
+                        Total Penalizari Aplicate
+                      </Text>
+                      <Text style={tw`font-semibold text-red-600`}>
+                        {stats.totalPenalties.toFixed(2)} RON
+                      </Text>
+                    </View>
+                    <View
+                      style={tw`flex-row justify-between items-center py-2 border-b border-gray-100`}
+                    >
+                      <Text style={tw`text-gray-700`}>
+                        Medie Penalizare/Plata
+                      </Text>
+                      <Text style={tw`font-semibold text-gray-900`}>
+                        {stats.averagePenalty.toFixed(2)} RON
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 }
