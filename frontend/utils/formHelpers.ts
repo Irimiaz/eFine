@@ -344,6 +344,22 @@ export const generatePaymentOrderPDF = async (data: any) => {
   }
 };
 
+// Add this helper function to remove Romanian diacritics
+const removeDiacritics = (text: string): string => {
+  return text
+    .replace(/ă/g, "a")
+    .replace(/â/g, "a")
+    .replace(/î/g, "i")
+    .replace(/ș/g, "s")
+    .replace(/ț/g, "t")
+    .replace(/Ă/g, "A")
+    .replace(/Â/g, "A")
+    .replace(/Î/g, "I")
+    .replace(/Ș/g, "S")
+    .replace(/Ț/g, "T");
+};
+
+// Updated PDF generation function
 export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
@@ -354,7 +370,8 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const drawText = (text: string, x: number, y: number, options: any = {}) => {
-    page.drawText(text, {
+    const cleanText = removeDiacritics(text);
+    page.drawText(cleanText, {
       x,
       y,
       size: options.size || 12,
@@ -402,7 +419,7 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   });
 
   drawText(
-    `Generat la: ${new Date().toLocaleString("ro-RO")}`,
+    `Generat la: ${removeDiacritics(new Date().toLocaleString("ro-RO"))}`,
     margin + 20,
     y - 55,
     { size: 10, color: rgb(0.9, 0.9, 0.9) }
@@ -422,6 +439,8 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     ["Total Formulare:", stats.totalSubmissions.toString()],
     ["Total Incasat:", `${stats.totalRevenue.toFixed(2)} RON`],
     ["Medie Suma/Formular:", `${stats.averageFine.toFixed(2)} RON`],
+    ["Total Reduceri:", `${stats.totalDiscounts.toFixed(2)} RON`],
+    ["Total Penalizari:", `${stats.totalPenalties.toFixed(2)} RON`],
   ];
 
   summaryData.forEach(([label, value]) => {
@@ -440,7 +459,14 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   });
   y -= 20;
 
-  // Bar chart representation
+  drawText(
+    "Analiza evidentiaza proportia platilor efectuate in termen (cu reducere), in termen standard si dupa termen (cu penalizare).",
+    margin,
+    y,
+    { size: 10, color: rgb(0.5, 0.5, 0.5) }
+  );
+  y -= 25;
+
   const barWidth = width - 2 * margin - 200;
   const barHeight = 15;
 
@@ -497,6 +523,22 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
   );
   y -= 30;
 
+  drawText(
+    `Concluzie: Din totalul de ${stats.totalSubmissions} formulare, ${
+      stats.earlyPayments
+    } (${stats.earlyPaymentPercentage.toFixed(
+      1
+    )}%) au fost platite in termen si au beneficiat de reducere, in timp ce ${
+      stats.latePayments
+    } (${stats.latePaymentPercentage.toFixed(
+      1
+    )}%) au fost platite dupa termen si au primit penalizare.`,
+    margin,
+    y,
+    { size: 10 }
+  );
+  y -= 40;
+
   // Analysis 2: Fine Amount Distribution
   drawText("ANALIZA 2: DISTRIBUTIA SUMEI AMENZILOR", margin, y, {
     size: 14,
@@ -504,6 +546,14 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     color: rgb(0.2, 0.4, 0.8),
   });
   y -= 20;
+
+  drawText(
+    "Analiza evidentiaza distributia amenzilor in functie de valoarea acestora: amenzi mici (sub 200 RON), amenzi medii (200-500 RON) si amenzi mari (peste 500 RON).",
+    margin,
+    y,
+    { size: 10, color: rgb(0.5, 0.5, 0.5) }
+  );
+  y -= 25;
 
   // Fine distribution bars
   drawRect(margin, y, barWidth, barHeight, rgb(0.9, 0.9, 0.9));
@@ -553,6 +603,136 @@ export const generateStatisticsPDF = async (stats: any, data: any[]) => {
     { size: 10 }
   );
   y -= 30;
+
+  drawText(
+    `Concluzie: Din totalul de ${stats.totalSubmissions} formulare, ${
+      stats.lowFines
+    } (${stats.lowFinePercentage.toFixed(1)}%) sunt amenzi mici, ${
+      stats.mediumFines
+    } (${stats.mediumFinePercentage.toFixed(1)}%) sunt amenzi medii, si ${
+      stats.highFines
+    } (${stats.highFinePercentage.toFixed(1)}%) sunt amenzi mari.`,
+    margin,
+    y,
+    { size: 10 }
+  );
+  y -= 40;
+
+  // Analysis 3: Daily Payments (Line Chart Representation)
+  if (stats.dailyPayments && stats.dailyPayments.length > 0) {
+    drawText("ANALIZA 3: PLATA ZILNICA (ULTIMELE 30 ZILE)", margin, y, {
+      size: 14,
+      font: fontBold,
+      color: rgb(0.2, 0.4, 0.8),
+    });
+    y -= 20;
+
+    drawText(
+      "Graficul arata numarul de formulare platite in fiecare zi din ultimele 30 de zile.",
+      margin,
+      y,
+      { size: 10, color: rgb(0.5, 0.5, 0.5) }
+    );
+    y -= 25;
+
+    // Simple line chart representation using bars
+    const chartHeight = 80;
+    const chartStartY = y;
+    const chartWidth = width - 2 * margin;
+    const last7Days = stats.dailyPayments.slice(-7);
+    const maxCount = Math.max(...last7Days.map((d) => d.count), 1);
+    const barSpacing = chartWidth / 7;
+
+    // Draw chart background
+    drawRect(
+      margin,
+      y - chartHeight,
+      chartWidth,
+      chartHeight,
+      rgb(0.95, 0.95, 0.95)
+    );
+
+    // Draw bars for each day
+    last7Days.forEach((day, index) => {
+      const barHeight = (day.count / maxCount) * chartHeight;
+      const barX = margin + index * barSpacing + 5;
+      const barY = y - chartHeight + (chartHeight - barHeight);
+
+      drawRect(barX, barY, barSpacing - 10, barHeight, rgb(0.2, 0.4, 0.8));
+
+      // Day label
+      const date = new Date(day.date);
+      drawText(
+        date.getDate().toString(),
+        barX + (barSpacing - 10) / 2 - 5,
+        y - chartHeight - 15,
+        { size: 9 }
+      );
+    });
+
+    y -= chartHeight + 30;
+
+    drawText(
+      `Observatie: In ultimele 30 de zile, ziua cu cele mai multe plati a avut ${
+        stats.maxDailyPayments
+      } formulare. Media zilnica este de ${(
+        stats.totalSubmissions / 30
+      ).toFixed(1)} formulare.`,
+      margin,
+      y,
+      { size: 10 }
+    );
+    y -= 40;
+  }
+
+  // Analysis 4: Authority Distribution
+  if (stats.authorityStats && stats.authorityStats.length > 0) {
+    drawText("ANALIZA 4: DISTRIBUTIA PE AUTORITATI", margin, y, {
+      size: 14,
+      font: fontBold,
+      color: rgb(0.2, 0.4, 0.8),
+    });
+    y -= 20;
+
+    drawText(
+      "Top 5 autoritati emitente in functie de numarul de formulare procesate.",
+      margin,
+      y,
+      { size: 10, color: rgb(0.5, 0.5, 0.5) }
+    );
+    y -= 25;
+
+    stats.authorityStats.forEach((auth: any, index: number) => {
+      const authName = removeDiacritics(
+        auth.name.length > 30 ? auth.name.substring(0, 30) + "..." : auth.name
+      );
+      drawText(
+        `${index + 1}. ${authName}: ${
+          auth.count
+        } formulare (${auth.percentage.toFixed(1)}%)`,
+        margin,
+        y,
+        { size: 10 }
+      );
+      y -= 18;
+    });
+
+    y -= 10;
+
+    drawText(
+      `Concluzie: ${removeDiacritics(
+        stats.authorityStats[0]?.name || ""
+      )} este autoritatea cu cele mai multe formulare (${
+        stats.authorityStats[0]?.count
+      }), reprezentand ${stats.authorityStats[0]?.percentage.toFixed(
+        1
+      )}% din total.`,
+      margin,
+      y,
+      { size: 10 }
+    );
+    y -= 40;
+  }
 
   // Footer
   drawText(
