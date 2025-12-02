@@ -165,7 +165,7 @@ export default function FinePaymentForm() {
     else if (daysDiff > 15 && daysDiff <= 30) autoDiscountPercent = 25;
 
     let autoPenaltyPercent = 0;
-    if (daysDiff > 30) autoPenaltyPercent = 10;
+    if (daysDiff > 60) autoPenaltyPercent = 10;
 
     setProcentReducere(autoDiscountPercent.toString());
     setProcentPenalizare(autoPenaltyPercent.toString());
