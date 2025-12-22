@@ -25,6 +25,7 @@
     "dotenv": "^16.4.7",
     "expo": "~52.0.35",
     "expo-blur": "~14.0.3",
+    "expo-clipboard": "^8.0.8",
     "expo-constants": "~17.0.6",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",
