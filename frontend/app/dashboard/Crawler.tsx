@@ -15,6 +15,7 @@ import * as Clipboard from "expo-clipboard";
 import { useCreateBuilders } from "../../hooks/useCreateBuilders";
 import useStackNavigation from "../../hooks/useStackNavigation";
 import { MainStackParamList } from "../../types/navigation";
+import { downloadCSV, generateCSV } from "../../utils/csvHelpers";
 
 type DocumentData = {
   site_root: string;
@@ -68,6 +69,29 @@ export default function Crawler() {
     await Clipboard.setStringAsync(ministry.url);
     setCopiedId(ministry.id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleExportCSV = async () => {
+    if (!scrapedData?.data || scrapedData.data.length === 0) {
+      Alert.alert("Eroare", "Nu exista date de exportat");
+      return;
+    }
+
+    try {
+      const csvContent = generateCSV(scrapedData.data, scrapedData.site);
+      const siteName = scrapedData.site
+        ? scrapedData.site.replace(/[^a-zA-Z0-9]/g, "_")
+        : "pap_export";
+      const filename = `PAP_${siteName}_${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+
+      await downloadCSV(csvContent, filename);
+      Alert.alert("Succes", "CSV-ul a fost generat cu succes!");
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      Alert.alert("Eroare", "Nu s-a putut genera CSV-ul");
+    }
   };
 
   const handleScrapeUrl = async (url: string) => {
@@ -284,9 +308,28 @@ export default function Crawler() {
                 >
                   {/* Results Header */}
                   <View style={tw`p-4 border-b border-gray-200`}>
-                    <Text style={tw`text-lg font-bold text-gray-900 mb-2`}>
-                      Rezultate PAP
-                    </Text>
+                    <View
+                      style={tw`flex-row items-center justify-between mb-2`}
+                    >
+                      <Text style={tw`text-lg font-bold text-gray-900`}>
+                        Rezultate PAP
+                      </Text>
+                      <TouchableOpacity
+                        onPress={handleExportCSV}
+                        style={tw`bg-green-600 px-4 py-2 rounded-lg flex-row items-center gap-2`}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="download-outline"
+                          size={18}
+                          color="#fff"
+                        />
+                        <Text style={tw`text-white font-semibold text-sm`}>
+                          Export CSV
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
                     <Text style={tw`text-sm text-gray-600 mb-3`}>
                       Site: {scrapedData.site}
                     </Text>
