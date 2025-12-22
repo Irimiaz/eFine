@@ -744,6 +744,17 @@ export default function FinePaymentForm() {
             </Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={tw`flex-row items-center justify-center bg-transparent border-2 border-purple-600 rounded-xl py-4 gap-2`}
+            onPress={() => goToScreen("Crawler")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="globe-outline" size={20} color="#7C3AED" />
+            <Text style={tw`text-[15px] font-semibold text-purple-600`}>
+              Colecteaza PAP-uri
+            </Text>
+          </TouchableOpacity>
+
           {!!errorMessage && (
             <View
               style={tw`flex-row items-center bg-red-50 border border-red-200 rounded-lg p-3 mb-2 gap-2`}

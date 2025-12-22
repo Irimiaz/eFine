@@ -5,4 +5,5 @@ export type RootStackParamList = {
 export type MainStackParamList = {
   Dashboard: undefined;
   Statistics: undefined;
+  Crawler: undefined;
 };
