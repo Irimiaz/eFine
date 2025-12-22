@@ -8,6 +8,7 @@ import { openAI } from "../customRequests/openAI";
 import { findRoutes } from "../customRequests/findRoutes";
 import { ApiCustomRequest } from "../types/ApiRequest";
 import { ApiResponse } from "../types/ApiResponse";
+import { scrapeWebsite } from "../customRequests/webCrawl";
 
 async function handleCustomRequest(req: ApiCustomRequest, res: ApiResponse) {
   const { entity, params } = req.body.payload;
@@ -44,6 +45,9 @@ async function handleCustomRequest(req: ApiCustomRequest, res: ApiResponse) {
       break;
     case "OPENAI":
       ({ status, data } = await openAI(params));
+      break;
+    case "SCRAPE_WEBSITE":
+      ({ status, data } = await scrapeWebsite(params));
       break;
 
     default:

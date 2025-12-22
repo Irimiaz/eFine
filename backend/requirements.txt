@@ -2,3 +2,5 @@ fastapi
 uvicorn
 git+https://github.com/m-wrzr/populartimes.git
 python-dotenv
+httpx
+beautifulsoup4

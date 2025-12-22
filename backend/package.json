@@ -5,9 +5,9 @@
   "main": "index.ts",
   "scripts": {
     "start": "node index.ts",
-    "python": "python3 -m uvicorn main:app --reload --log-level warning",
+    "python": "py -m uvicorn main:app --reload --log-level warning",
     "dev": "nodemon index.ts",
-    "postinstall": "pip install -r requirements.txt",
+    "postinstall": "py -m pip install -r requirements.txt",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
